@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypelang="RNG" ?>
+<package format="3">
+  <name>robocup_description</name>
+  <version>0.0.0</version>
+  <description>URDF/xacro and meshes of the MRVK "shoddy" robot for the RoboCup Isaac Sim workspace.</description>
+  <maintainer email="adam.eliasdk@gmail.com">adam</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

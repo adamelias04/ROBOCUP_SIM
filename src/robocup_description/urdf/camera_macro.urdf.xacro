@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+<robot name="shoddy" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="camera_macro" params="name parent">
+        <!-- Properties ==================================================== -->
+        <!-- Base -->
+        <!-- Base upper -->
+        <xacro:property name="base_upper_radius" value="0.058"/>
+        <xacro:property name="base_upper_length" value="0.025"/>
+
+        <xacro:property name="base_upper_x" value="0.16"/>
+        <xacro:property name="base_upper_y" value="0.0"/>
+        <xacro:property name="base_upper_z" value="${BASE_SIZE_Z/2 + base_lower_length + base_upper_length/2}"/>
+
+        <!-- Base lower -->
+        <xacro:property name="base_lower_radius" value="0.02"/>
+        <xacro:property name="base_lower_length" value="0.041"/>
+
+        <xacro:property name="base_lower_x" value="${base_upper_x - base_upper_radius + base_lower_radius}"/>
+        <xacro:property name="base_lower_y" value="0.0"/>
+        <xacro:property name="base_lower_z" value="${BASE_SIZE_Z/2 + base_lower_length/2}"/>
+
+        <!-- Base holder -->
+        <xacro:property name="base_holder_radius" value="0.005"/>
+        <xacro:property name="base_holder_length" value="${box_size_y + 0.01}"/>
+
+        <xacro:property name="base_holder_x" value="${box_x}"/>
+        <xacro:property name="base_holder_y" value="${box_y}"/>
+        <xacro:property name="base_holder_z" value="${box_z}"/>
+
+        <xacro:property name="pitch" value="${pi/8}"/>
+
+        <xacro:property name="base_material" value="Grey"/>
+        <!-- Base -->
+
+
+
+        <!-- Holder -->
+        <xacro:property name="C" value="${sqrt(2)}"/>
+
+        <xacro:property name="holder_lower_width" value="${box_size_x}"/>
+        <xacro:property name="holder_upper_width" value="${box_size_x/2}"/>
+        <xacro:property name="holder_height" value="0.30"/>
+        <xacro:property name="holder_width" value="0.01"/>
+
+        <xacro:property name="holder_corner_size" value="${1/C*(holder_lower_width - holder_upper_width)}"/>
+
+        <xacro:property name="holder_x" value="${base_upper_x}"/>
+        <xacro:property name="holder_left_y" value="${-box_size_y/2 - holder_width/2 - 0.005}"/>
+        <xacro:property name="holder_right_y" value="${box_size_y/2 + holder_width/2 + 0.005}"/>
+        <xacro:property name="holder_z" value="${base_upper_z + base_upper_length/2}"/>
+
+        <xacro:property name="holder_material" value="DarkGrey"/>
+        <!-- Holder -->
+
+
+
+        <!-- Box -->
+        <xacro:property name="box_size_x" value="0.07"/>
+        <xacro:property name="box_size_y" value="0.06"/>
+        <xacro:property name="box_size_z" value="0.06"/>
+
+        <xacro:property name="box_x" value="${base_upper_x}"/>
+        <xacro:property name="box_y" value="${base_upper_y}"/>
+        <xacro:property name="box_z" value="${base_upper_z + base_upper_length/2 + holder_height - box_size_z/2}"/>
+
+        <xacro:property name="box_material" value="DarkGrey"/>
+        <!-- Box -->
+
+
+
+        <!-- Lens -->
+        <xacro:property name="lens_radius" value="0.025"/>
+        <xacro:property name="lens_length" value="0.005"/>
+
+        <xacro:property name="lens_x" value="${box_x + lens_shift_x*cos(pitch)}"/>
+        <xacro:property name="lens_y" value="${box_y}"/>
+        <xacro:property name="lens_z" value="${box_z - lens_shift_x*sin(pitch)}"/>
+
+        <xacro:property name="lens_shift_x" value="${box_size_x/2 + lens_length/2}"/>
+        
+        <xacro:property name="lens_material" value="Black"/>
+        <!-- Lens -->
+        <!-- ==================================================== Properties -->
+
+
+
+        <!-- Macros ======================================================== -->
+        <!-- Base -->
+        <xacro:macro name="base_macro" params="name radius length x y z rpy parent">
+            <link name="${name}_link">
+                <visual>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <geometry>
+                        <cylinder radius="${radius}" length="${length}"/>
+                    </geometry>
+                    <material name="${base_material}"/>
+                </visual>
+
+                <collision>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <geometry>
+                        <cylinder radius="${radius}" length="${length}"/>
+                    </geometry>
+                </collision>
+
+                <inertial>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <mass value="0.0"/>
+                    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+                </inertial>
+            </link>
+
+            <joint name="${name}_joint" type="fixed">
+                <origin xyz="${x} ${y} ${z}" rpy="${rpy}"/>
+                <parent link="${parent}"/>
+                <child link="${name}_link"/>
+            </joint>
+
+            <gazebo reference="${name}_link">
+                <material>Gazebo/Grey</material>
+            </gazebo>
+        </xacro:macro>
+        <!-- Base -->
+
+
+
+        <!-- Holder -->
+        <xacro:macro name="holder_macro" params="name x y z parent">
+            <xacro:macro name="box_macro" params="name size xyz rpy parent">
+                <link name="${name}_link"> 
+                    <visual>
+                        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                        <geometry>
+                            <box size="${size}"/>
+                        </geometry>
+                        <material name="${holder_material}"/>
+                    </visual>
+
+                    <collision>
+                        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                        <geometry>
+                            <box size="${size}"/>
+                        </geometry>
+                    </collision>
+
+                    <inertial>
+                        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                        <mass value="0.0"/>
+                        <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+                    </inertial>
+                </link>
+
+                <joint name="${name}_joint" type="fixed">
+                    <origin xyz="${xyz}" 
+                            rpy="${rpy}"/>
+                    <parent link="${parent}"/>
+                    <child link="${name}_link"/>
+                </joint>
+
+                <gazebo reference="${name}_link">   
+                    <material>Gazebo/FlatBlack</material>
+                </gazebo>
+            </xacro:macro>
+
+            <xacro:box_macro name="${name}_1"
+                             size="${holder_lower_width} ${holder_width} ${holder_height - C/2*holder_corner_size}"
+                             xyz="${x} ${y} ${z + (holder_height - C/2*holder_corner_size)/2}"
+                             rpy="0.0 0.0 0.0"
+                             parent="${parent}"/>
+            <xacro:box_macro name="${name}_2"
+                             size="${holder_upper_width} ${holder_width} ${holder_height}"
+                             xyz="${x} ${y} ${z + holder_height/2}"
+                             rpy="0.0 0.0 0.0"
+                             parent="${parent}"/>
+            <xacro:box_macro name="${name}_3"
+                             size="${holder_corner_size} ${holder_width} ${holder_corner_size} "
+                             xyz="${x - holder_upper_width/2} ${y} ${z + (holder_height - C/2*holder_corner_size)}"
+                             rpy="0.0 ${pi/4} 0.0"
+                             parent="${parent}"/>
+            <xacro:box_macro name="${name}_4"
+                             size="${holder_corner_size} ${holder_width} ${holder_corner_size} "
+                             xyz="${x + holder_upper_width/2} ${y} ${z + (holder_height - C/2*holder_corner_size)}"
+                             rpy="0.0 ${pi/4} 0.0"
+                             parent="${parent}"/>
+        </xacro:macro>
+        <!-- Holder -->
+
+
+
+        <!-- Box -->
+        <xacro:macro name="box_macro" params="name size xyz rpy parent">
+            <link name="${name}_link">
+                <visual>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <geometry>
+                        <box size="${size}"/>
+                    </geometry>
+                    <material name="${box_material}"/>
+                </visual>
+
+                <collision>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <geometry>
+                        <box size="${size}"/>
+                    </geometry>
+                </collision>
+
+                <inertial>
+                    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                    <mass value="0.0"/>
+                    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+                </inertial>
+            </link>
+
+            <joint name="${name}_joint" type="fixed">
+                <origin xyz="${xyz}"
+                        rpy="${rpy}"/>
+                <parent link="${parent}"/>
+                <child link="${name}_link"/>
+            </joint>
+
+            <gazebo reference="${name}_link">
+                <material>Gazebo/FlatBlack</material>
+            </gazebo>
+        </xacro:macro>
+        <!-- Box -->
+
+
+
+        <!-- Lens -->
+        <xacro:macro name="lens_macro" params="name radius length xyz rpy parent">
+        <link name="${name}">    
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 ${pi/2} 0.0"/>
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}"/>
+                </geometry>
+                <material name="${lens_material}"/>
+            </visual>
+
+            <collision>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 ${pi/2} 0.0"/>
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 ${pi/2} 0.0"/>
+                <mass value="0.0"/>
+                <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            </inertial>
+        </link>
+
+        <joint name="camera_lens_joint" type="fixed">
+            <origin xyz="${xyz}"
+                    rpy="${rpy}"/>
+            <parent link="${parent}"/>
+            <child link="${name}"/>
+        </joint>
+
+        <gazebo reference="${name}">   
+            <material>Gazebo/Black</material>
+        </gazebo>
+        </xacro:macro>
+        <!-- Lens -->
+        <!-- ======================================================== Macros -->
+
+
+
+        <!-- Links ========================================================= -->
+        <xacro:base_macro name="camera_base_upper"
+                          radius="${base_upper_radius}"
+                          length="${base_upper_length}"
+                          x="${base_upper_x}"
+                          y="${base_upper_y}"
+                          z="${base_upper_z}"
+                          rpy="0.0 0.0 0.0"
+                          parent="${parent}"/>
+
+        <xacro:base_macro name="camera_base_lower"
+                          radius="${base_lower_radius}"
+                          length="${base_lower_length}"
+                          x="${base_lower_x}"
+                          y="${base_lower_y}"
+                          z="${base_lower_z}"
+                          rpy="0.0 0.0 0.0"
+                          parent="${parent}"/>
+
+        <xacro:base_macro name="camera_base_holder"
+                          radius="${base_holder_radius}"
+                          length="${base_holder_length}"
+                          x="${base_holder_x}"
+                          y="${base_holder_y}"
+                          z="${base_holder_z}"
+                          rpy="${pi/2} 0.0 0.0"
+                          parent="${parent}"/>
+
+        <xacro:holder_macro name="camera_holder_left"
+                            x="${holder_x}"
+                            y="${holder_left_y}"
+                            z="${holder_z}"
+                            parent="${parent}"/>
+        
+        <xacro:holder_macro name="camera_holder_right"
+                            x="${holder_x}"
+                            y="${holder_right_y}"
+                            z="${holder_z}"
+                            parent="${parent}"/>
+
+        <xacro:box_macro name="camera_box"
+                         size="${box_size_x} ${box_size_y} ${box_size_z}"
+                         xyz="${box_x} ${box_y} ${box_z}"
+                         rpy= "0.0 ${pitch} 0.0"
+                         parent="${parent}"/>
+
+        <xacro:lens_macro name="${name}"
+                          radius="${lens_radius}"
+                          length="${lens_length}"
+                          xyz="0.167663 0.0 0.194112"
+                          rpy="-1.8288456 0.0022189 -1.5752228"
+                          parent="${parent}"/>
+        <!-- ========================================================= Links -->
+    </xacro:macro>
+</robot>   

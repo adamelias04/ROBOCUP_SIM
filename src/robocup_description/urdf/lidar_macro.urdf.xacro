@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot name="shoddy
+" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="lidar_macro" params="name parent">
+        <!-- Properties -->
+        <xacro:property name="size_x" value="0.03"/>
+        <xacro:property name="size_y" value="0.03"/>
+        <xacro:property name="size_z" value="0.04"/>
+        
+        <xacro:property name="origin_x" value="0.207875"/>
+        <xacro:property name="origin_y" value="0.0"/>
+        <xacro:property name="origin_z" value="0.128825"/>
+
+
+
+        <!-- Link -->
+        <link name="${name}">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <mesh filename="package://robocup_description/meshes/lidar/hokuyo.dae"/>
+                </geometry>
+            </visual>
+
+            <collision>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <geometry>
+                    <box size="${size_x} ${size_y} ${size_z}"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+                <mass value="0.0"/>
+                <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            </inertial>
+        </link>
+
+        <joint name="sensor_laser_joint" type="fixed">
+            <origin xyz="${origin_x} ${origin_y} ${origin_z}" rpy="0.0 0.0 0.0"/>
+            <parent link="${parent}"/>
+            <child link="${name}"/>
+        </joint>
+
+        <!-- <gazebo reference="${name}">
+            <material>Gazebo/DarkGrey</material>
+        </gazebo> -->
+    </xacro:macro>
+</robot>   

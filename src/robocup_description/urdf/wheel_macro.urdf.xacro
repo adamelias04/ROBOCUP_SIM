@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<robot name="shoddy" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="wheel_macro" params="side part xyz parent">
+        <!-- Properties ==================================================== -->
+        <xacro:property name="radius" value="0.115"/>
+        <xacro:property name="length" value="0.065"/>
+        <xacro:property name="mass" value="0.5"/>
+
+        <xacro:property name="Cr" value="${0.001/0.033}"/>
+        <xacro:property name="Cl" value="${0.001/0.018}"/>
+        <!-- ==================================================== Properties -->
+
+
+
+        <!-- Link ========================================================== -->
+        <link name="wheel_${side}_${part}_link">
+            <visual>
+                <origin xyz="0.0 0.0 0.0" rpy="${pi/2*0.0} 0.0 0.0"/>
+                <geometry>
+                    <mesh filename="package://robocup_description/meshes/wheels/${side}_tire.stl"
+                          scale="${Cr*radius} ${Cl*length} ${Cr*radius}"/>
+                </geometry>
+                <material name="Black"/>
+            </visual>
+            
+            <collision>
+                <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+                <mass value="${mass}"/>
+                <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+            </inertial>
+        </link>
+
+        <joint name="wheel_${side}_${part}_to_base_joint" type="continuous">
+            <axis xyz="0.0 1.0 0.0"/>
+            <origin xyz="${xyz}" rpy="0.0 0.0 0.0"/>
+            <parent link="${parent}"/>
+            <child link="wheel_${side}_${part}_link"/>
+        </joint>
+
+        <gazebo reference="wheel_${side}_${part}_link">
+            <mu1 value="1.0"/>
+            <mu2 value="1.0"/>
+            <kp value="100000.0"/>
+            <kd value="1.0"/>
+            <material>Gazebo/FlatBlack</material>
+        </gazebo>
+        <!-- ========================================================== Link -->
+    </xacro:macro>
+</robot>   

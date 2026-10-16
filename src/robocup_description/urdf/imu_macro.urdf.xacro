@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot name="shoddy" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="imu_macro" params="name xyz parent">
+        <!-- Properties ==================================================== -->
+        <xacro:property name="box_size_x" value="0.001"/>
+        <xacro:property name="box_size_y" value="0.001"/>
+        <xacro:property name="box_size_z" value="0.001"/>
+
+        <xacro:property name="imu_material" value="Black"/>
+        <!-- ==================================================== Properties -->
+
+
+
+        <!-- Link ========================================================== -->
+        <link name="${name}">
+            <visual>
+                <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+                <geometry>
+                    <box size="${box_size_x} ${box_size_y} ${box_size_z}"/>
+                </geometry>
+                <material name="${imu_material}"/>
+            </visual>
+
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <geometry>
+                    <box size="${box_size_x} ${box_size_y} ${box_size_z}"/>
+                </geometry>
+            </collision>
+
+            <inertial>
+                <mass value="0.0"/>
+                <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+                <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            </inertial>
+        </link>
+
+        <joint name="imu_joint" type="fixed">
+            <axis xyz="0.0 0.0 0.0"/>
+            <origin xyz="${xyz}"/>
+            <parent link="${parent}"/>
+            <child link="${name}"/>
+        </joint>
+
+        <gazebo reference="${name}">
+            <material>Gazebo/Black</material>
+        </gazebo>
+        <!-- ========================================================== Link -->
+    </xacro:macro>
+</robot>

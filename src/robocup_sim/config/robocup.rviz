@@ -1,0 +1,141 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic:
+        Value: /scan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Size (m): 0.04
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 255; 50; 50
+      Decay Time: 0
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: false
+      Topic:
+        Value: /odom
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    # The rest needs nav:=true (Nav2 + slam_toolbox).
+    - Class: rviz_default_plugins/Map
+      Name: SLAM map
+      Enabled: true
+      Color Scheme: map
+      Alpha: 0.5
+      Draw Behind: true
+      Topic:
+        Value: /map
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Map
+      Name: Global costmap
+      Enabled: false
+      Color Scheme: costmap
+      Alpha: 0.4
+      Topic:
+        Value: /global_costmap/costmap
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Map
+      Name: Local costmap
+      Enabled: true
+      Color Scheme: costmap
+      Alpha: 0.6
+      Topic:
+        Value: /local_costmap/costmap
+        Depth: 1
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Path
+      Name: Global plan
+      Enabled: true
+      Color: 25; 255; 0
+      Line Style: Lines
+      Topic:
+        Value: /plan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Path
+      Name: Local plan
+      Enabled: true
+      Color: 0; 120; 255
+      Line Style: Lines
+      Topic:
+        Value: /local_plan
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Polygon
+      Name: Footprint
+      Enabled: true
+      Color: 255; 255; 0
+      Topic:
+        Value: /local_costmap/published_footprint
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+  Global Options:
+    Fixed Frame: odom
+    Background Color: 48; 48; 48
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/Measure
+    # 2D Goal Pose -> /goal_pose, which bt_navigator turns into a NavigateToPose.
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 40
+      X: 0
+      Y: 0
+      Target Frame: base_link
+Window Geometry:
+  Width: 1400
+  Height: 900
