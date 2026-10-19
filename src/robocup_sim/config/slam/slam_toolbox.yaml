@@ -1,6 +1,5 @@
-# slam_toolbox (async) — ROS2 replacement for the ROS1 gmapping node.
-# Provides the map->odom transform and builds the /map. Navigation itself runs
-# in the odom frame (see nav2 params), so SLAM here is mainly for mapping/viz.
+# slam_toolbox (async), nahrada za ROS1 gmapping. Publikuje map->odom a /map.
+# Navigacia bezi v odom, takze SLAM je tu len na mapu v RViz.
 slam_toolbox:
   ros__parameters:
     use_sim_time: true
@@ -30,7 +29,6 @@ slam_toolbox:
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000
 
-    # General Motion Parameters
     use_scan_matching: true
     use_scan_barycenter: true
     minimum_travel_distance: 0.2
@@ -46,17 +44,14 @@ slam_toolbox:
     loop_match_minimum_response_coarse: 0.35
     loop_match_minimum_response_fine: 0.45
 
-    # Correlation Parameters
     correlation_search_space_dimension: 0.5
     correlation_search_space_resolution: 0.01
     correlation_search_space_smear_deviation: 0.1
 
-    # Loop Closure Parameters
     loop_search_space_dimension: 8.0
     loop_search_space_resolution: 0.05
     loop_search_space_smear_deviation: 0.03
 
-    # Scan Matcher Parameters
     distance_variance_penalty: 0.5
     angle_variance_penalty: 1.0
     fine_search_angle_offset: 0.00349

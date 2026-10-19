@@ -1,8 +1,7 @@
-# Nav2 for shoddy in the Isaac Sim arena (port of the MRVK Gazebo stack's
-# nav2.launch.py): controller/planner/behavior/bt_navigator/waypoint_follower
-# with the selected planner's param file and a lifecycle manager. Navigation
-# runs in `odom`; the controller drives /cmd_vel, which Isaac subscribes to.
-# Included by robocup.launch.py nav:=true.
+# Nav2 pre shoddy v arene (podla nav2.launch.py z Gazebo verzie MRVK):
+# controller, planner, behavior, bt_navigator, waypoint_follower a lifecycle
+# manager, parametre podla zvoleneho plannera. Naviguje sa v `odom`, controller
+# posiela /cmd_vel priamo do Isaacu. Spusta ho robocup.launch.py nav:=true.
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -35,7 +34,6 @@ def launch_setup(context, *args, **kwargs):
         package='nav2_planner', executable='planner_server', name='planner_server',
         output='screen', parameters=params,
     )
-    # Recoveries (spin/backup) must drive the same topic as the controller.
     behavior = Node(
         package='nav2_behaviors', executable='behavior_server', name='behavior_server',
         output='screen', parameters=params, remappings=[('cmd_vel', cmd_vel_out)],
@@ -65,8 +63,8 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('planner', default_value='teb',
-                              description='Local planner: dwb | teb | tr'),
+                              description='Lokalny planner: dwb | teb | tr'),
         DeclareLaunchArgument('cmd_vel_out', default_value='/cmd_vel',
-                              description='Controller/behavior cmd_vel output topic'),
+                              description='Tema, na ktoru controller a behavior posielaju cmd_vel'),
         OpaqueFunction(function=launch_setup),
     ])

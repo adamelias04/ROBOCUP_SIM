@@ -1,7 +1,5 @@
-# Nav2 parameters for the MRVK "shoddy" robot — TEB controller
-# (teb_local_planner, built from source in this workspace). Navigation
-# is done in the `odom` frame with a rolling-window global costmap (no
-# static map), matching the ROS1 project.
+# Nav2 pre shoddy s TEB (teb_local_planner, buildi sa zo zdrojov v tomto ws).
+# Naviguje sa v `odom` s klzavou globalnou costmapou, bez statickej mapy.
 
 bt_navigator:
   ros__parameters:
@@ -64,16 +62,10 @@ controller_server:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.20
-      yaw_goal_tolerance: 6.28   # 2*pi = ignoruj finalnu orientaciu robota
+      yaw_goal_tolerance: 6.28
 
-    # TEB — teb_local_planner ROS2 (built from source into the workspace).
-    # Params mapped from teb_local_planner.yaml.
     FollowPath:
       plugin: "teb_local_planner::TebLocalPlannerROS"
-      # POZOR: hodnoty drzat na ROS1-efektivnych (= TEB defaultoch tam, kde
-      # ich original nenastavoval). Odchylky sposobovali cik-cak a slucky:
-      # viapoint_sep>0 + weight_viapoint 20 spendlili TEB k NavFn trase,
-      # allow_init_with_backwards_motion=true robilo cuvacie inicializacie.
       teb_autosize: 1.0
       dt_ref: 0.3
       dt_hysteresis: 0.1
@@ -87,7 +79,6 @@ controller_server:
       feasibility_check_no_poses: 5
       publish_feedback: False
 
-      # Robot (diff drive)
       max_vel_x: 1.0
       max_vel_x_backwards: 0.8
       max_vel_y: 0.0
@@ -98,23 +89,13 @@ controller_server:
 
       footprint_model:
         type: "polygon"
-        vertices: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"   # same as the costmaps
+        vertices: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"
 
-      # GoalTolerance
       xy_goal_tolerance: 0.20
-      yaw_goal_tolerance: 6.28   # 2*pi = ignoruj finalnu orientaciu robota
-      # False = TEB spomali a ZASTAVI v cieli. True (povodne z ROS1) necha
-      # robota prejst cielom plnou rychlostou -> prestreli, goal checker ho
-      # vrati, znova prestreli => kmitanie okolo ciela ("oscillation recovery
-      # expired" v logu). Pre finalny navigacny ciel patri false.
+      yaw_goal_tolerance: 6.28
       free_goal_vel: False
 
-      # Obstacles
-      # Extra clearance on top of the polygon footprint. 0.20 (+ penalty_epsilon)
-      # left no room in the arena's ~0.9 m doorways.
       min_obstacle_dist: 0.05
-      # inflation_dist = mäkká zóna, v ktorej TEB uz ohyba trajektoriu prec od
-      # prekazky. Vyssie => robot zacne uhybat SKOR (z vacsej vzdialenosti).
       inflation_dist: 0.45
       include_costmap_obstacles: True
       costmap_obstacles_behind_robot_dist: 1.5
@@ -122,7 +103,6 @@ controller_server:
       dynamic_obstacle_inflation_dist: 0.6
       include_dynamic_obstacles: True
 
-      # Optimization
       no_inner_iterations: 5
       no_outer_iterations: 4
       optimization_activate: True
@@ -134,10 +114,6 @@ controller_server:
       weight_acc_lim_x: 1.0
       weight_acc_lim_theta: 1.0
       weight_kinematics_nh: 1000.0
-      # Preferencia jazdy dopredu. Povodne 2.0 (ROS1) prilis nizke -> pri cieli
-      # volne cuval a nabiehal (velke kmitanie). 100 zas prilis vysoke -> miesto
-      # malej korekcie cuvanim robil dopredny obluk/slucku pri cieli. 20 = zlaty
-      # stred: brani velkej oscilacii, ale dovoli ciste dosadnutie.
       weight_kinematics_forward_drive: 20.0
       weight_kinematics_turning_radius: 1.0
       weight_optimaltime: 0.8
@@ -149,12 +125,6 @@ controller_server:
       weight_viapoint: 20.0
       weight_adapt_factor: 2.0
 
-      # Homotopy Class Planner
-      # HCP (planovanie vo viacerych homotopickych triedach) vypnute: pri cieli
-      # blizko prekazky TEB inak neustale prepina "obidem zlava/sprava" =>
-      # kmitanie okolo ciela. Global planner (NavFn) trasu okolo prekazok najde
-      # sam, takze jednotriedny TEB staci a je stabilny. (Pri navrate k hustym
-      # dynamickym scenam mozes HCP zapnut spat.)
       enable_homotopy_class_planning: False
       enable_multithreading: True
       max_number_classes: 3
@@ -168,9 +138,6 @@ controller_server:
       h_signature_prescaler: 1.0
       h_signature_threshold: 0.1
       obstacle_heading_threshold: 0.45
-      # >0: po prepnuti homotopickej triedy zablokuj dalsie prepnutie na tento
-      # cas [s]. 0.0 (default) dovoli bleskovy flip-flop => kmitanie okolo ciela
-      # pri prekazke. 1.0 to utlmi bez straty HCP.
       switching_blocking_period: 1.0
       viapoints_all_candidates: True
       delete_detours_backwards: True
@@ -190,7 +157,6 @@ local_costmap:
       width: 20
       height: 20
       resolution: 0.05
-      # Rectangle over the bumpers (x ±0.275) and the wheels (y ±0.2325).
       footprint: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"
       transform_tolerance: 0.2
       track_unknown_space: false
@@ -199,9 +165,6 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: true
-        # Isaac's RTX lidar (relayed to /scan with no-hit beams as inf):
-        # one source marks hits, the other clears along every beam
-        # including the inf ones.
         observation_sources: sim_scan_marking sim_scan_clearing
         sim_scan_marking:
           topic: /scan
@@ -228,8 +191,6 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        # Above the footprint's inscribed radius (0.245), so NavFn keeps the
-        # plan centred in doorways instead of hugging the frame.
         inflation_radius: 0.5
         cost_scaling_factor: 4.0
       always_send_full_costmap: True
@@ -248,7 +209,6 @@ global_costmap:
       resolution: 0.05
       origin_x: -15.0
       origin_y: -15.0
-      # Rectangle over the bumpers (x ±0.275) and the wheels (y ±0.2325).
       footprint: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"
       transform_tolerance: 0.5
       track_unknown_space: false
@@ -257,9 +217,6 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: true
-        # Isaac's RTX lidar (relayed to /scan with no-hit beams as inf):
-        # one source marks hits, the other clears along every beam
-        # including the inf ones.
         observation_sources: sim_scan_marking sim_scan_clearing
         sim_scan_marking:
           topic: /scan
@@ -286,8 +243,6 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        # Above the footprint's inscribed radius (0.245), so NavFn keeps the
-        # plan centred in doorways instead of hugging the frame.
         inflation_radius: 0.5
         cost_scaling_factor: 4.0
       always_send_full_costmap: True

@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Prepublikuje LaserScan a luce bez odrazu (Isaac Sim RTX lidar ich hlasi ako
-0.0) prepise na +inf, ako to robi Hokuyo aj Gazebo ray senzor. slam_toolbox
-by inak bral nuly ako body v strede robota a robil falosne loop closures.
-
-Pouzitie (v robocup.launch.py):  /scan_raw -> /scan
-"""
+# Preposiela /scan_raw na /scan a luce bez odrazu (RTX lidar v Isaacu ich hlasi
+# ako 0.0) prepise na inf, ako realny Hokuyo. slam_toolbox by inak bral nuly ako
+# body v strede robota. Spusta ho robocup.launch.py.
 import math
 
 import rclpy
@@ -18,7 +13,6 @@ from sensor_msgs.msg import LaserScan
 class ScanNoHitToInf(Node):
     def __init__(self):
         super().__init__('scan_no_hit_to_inf')
-        # Reliable matches both best-effort (costmaps) and reliable subscribers.
         self.pub = self.create_publisher(LaserScan, 'scan_out', 10)
         self.create_subscription(LaserScan, 'scan_in', self.on_scan, qos_profile_sensor_data)
 

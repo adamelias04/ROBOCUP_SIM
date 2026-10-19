@@ -1,6 +1,5 @@
-# Nav2 parameters for the MRVK "shoddy" robot — DWB controller (ROS2 successor
-# of the ROS1 dwa_local_planner). Navigation is done in the `odom` frame with a
-# rolling-window global costmap (no static map), matching the ROS1 project.
+# Nav2 pre shoddy s DWB (nastupca ROS1 dwa_local_planner).
+# Naviguje sa v `odom` s klzavou globalnou costmapou, bez statickej mapy.
 
 bt_navigator:
   ros__parameters:
@@ -63,24 +62,19 @@ controller_server:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.20
-      yaw_goal_tolerance: 6.28   # 2*pi = ignoruj finalnu orientaciu robota
+      yaw_goal_tolerance: 6.28
 
-    # DWB — ROS2 successor of dwa_local_planner (params mapped from
-    # dwa_local_planner.yaml).
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      # ROS1 base_local_planner mal escape_vel -0.2 a DWA sa spoliehal na
-      # rotate_recovery; DWB nema escape mechanizmus, takze povolime mierne
-      # cuvanie, inak sa robot v rohu pri stene zablokuje (deadlock).
       min_vel_x: -0.2
       min_vel_y: 0.0
       max_vel_x: 1.0
       max_vel_y: 0.0
       max_vel_theta: 1.0
-      min_speed_xy: 0.10   # ROS1 min_vel_trans
+      min_speed_xy: 0.10
       max_speed_xy: 1.0
-      min_speed_theta: 0.30   # ROS1 min_vel_theta - zakazuje mikro-rotacie, ktore skid-steer fyzicky neotocia
+      min_speed_theta: 0.30
       acc_lim_x: 3.0
       acc_lim_y: 0.0
       acc_lim_theta: 2.8
@@ -122,7 +116,6 @@ local_costmap:
       width: 20
       height: 20
       resolution: 0.05
-      # Rectangle over the bumpers (x ±0.275) and the wheels (y ±0.2325).
       footprint: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"
       transform_tolerance: 0.2
       track_unknown_space: false
@@ -131,9 +124,6 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: true
-        # Isaac's RTX lidar (relayed to /scan with no-hit beams as inf):
-        # one source marks hits, the other clears along every beam
-        # including the inf ones.
         observation_sources: sim_scan_marking sim_scan_clearing
         sim_scan_marking:
           topic: /scan
@@ -160,8 +150,6 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        # Above the footprint's inscribed radius (0.245), so NavFn keeps the
-        # plan centred in doorways instead of hugging the frame.
         inflation_radius: 0.5
         cost_scaling_factor: 4.0
       always_send_full_costmap: True
@@ -180,7 +168,6 @@ global_costmap:
       resolution: 0.05
       origin_x: -15.0
       origin_y: -15.0
-      # Rectangle over the bumpers (x ±0.275) and the wheels (y ±0.2325).
       footprint: "[[0.28, 0.235], [0.28, -0.235], [-0.28, -0.235], [-0.28, 0.235]]"
       transform_tolerance: 0.5
       track_unknown_space: false
@@ -189,9 +176,6 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: true
-        # Isaac's RTX lidar (relayed to /scan with no-hit beams as inf):
-        # one source marks hits, the other clears along every beam
-        # including the inf ones.
         observation_sources: sim_scan_marking sim_scan_clearing
         sim_scan_marking:
           topic: /scan
@@ -218,8 +202,6 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        # Above the footprint's inscribed radius (0.245), so NavFn keeps the
-        # plan centred in doorways instead of hugging the frame.
         inflation_radius: 0.5
         cost_scaling_factor: 4.0
       always_send_full_costmap: True

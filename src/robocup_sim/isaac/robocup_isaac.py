@@ -1,17 +1,15 @@
-# Isaac Sim side of the RoboCup simulation: loads the arena USD, imports the
-# "shoddy" robot from robocup_description's xacro and exposes it over ROS 2:
-#   /clock, /odom + TF odom->base_link,
-#   /scan_raw (LaserScan, frame lidar_frame; robocup.launch.py relays it to
-#     /scan with no-hit beams as inf)                                  (out)
-#   /cmd_vel                                                           (in)
+# Isaac Sim strana simulacie: nacita arenu z USD, importuje robota shoddy
+# z xacro v robocup_description a napoji ho na ROS 2:
+#   von: /clock, /odom + TF odom->base_link, /scan_raw (LaserScan, frame
+#        lidar_frame; robocup.launch.py ho preposiela na /scan)
+#   dnu: /cmd_vel
 #
-# The base is driven kinematically: cmd_vel is applied as the chassis velocity
-# and the wheels are frictionless passengers. PhysX's 4-wheel skid steer with
-# this URDF chattered, could not turn on the spot and flipped.
+# Podvozok je kinematicky: cmd_vel sa nastavi priamo ako rychlost tela a kolesa
+# su bez trenia. Fyzikalny 4-kolesovy skid steer v PhysX s tymto URDF
+# vibroval, nevedel sa otocit na mieste a prevracal sa.
 #
-# Started by ../../../run.sh. By hand: run with Isaac's own Python from a
-# shell WITHOUT /opt/ros/humble sourced (the bridge ships its own Humble libs
-# for Python 3.12):
+# Spusta ho ../../../run.sh. Rucne cez Python Isaacu zo shellu BEZ
+# /opt/ros/humble (bridge ma vlastne Humble kniznice pre Python 3.12):
 #   env -i HOME=$HOME DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY PATH=/usr/bin:/bin \
 #     ~/isaacsim/python.sh src/robocup_sim/isaac/robocup_isaac.py
 import argparse
@@ -29,14 +27,13 @@ DEFAULT_WORLD = os.path.join(
     WS, 'src/robocup_sim/worlds/robocup_arena/2026_09_01_RoboCup_HCC_Arena_V1.usd')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--world', default=DEFAULT_WORLD, help='USD environment to load')
+parser.add_argument('--world', default=DEFAULT_WORLD, help='USD prostredie')
 parser.add_argument('--headless', action='store_true')
-# The arena centre is free floor.
 parser.add_argument('--x', type=float, default=0.0)
 parser.add_argument('--y', type=float, default=0.0)
 parser.add_argument('--yaw', type=float, default=0.0)
 parser.add_argument('--frames', type=int, default=0,
-                    help='Stop after this many frames (0 = run until closed)')
+                    help='Skonci po tolkych snimkach (0 = bez konca)')
 args, _ = parser.parse_known_args()
 
 simulation_app = SimulationApp({'headless': args.headless})
@@ -60,13 +57,9 @@ from isaacsim.sensors.experimental.rtx import Lidar
 from pxr import Gf, Usd, UsdGeom, UsdLux, UsdPhysics, UsdShade
 
 PHYSICS_DT = 1.0 / 60.0
-# Limits of the robot's diff drive (max_wheel_acceleration on the body, and the
-# same wheel limit as turn rate over the 0.48 m wheel separation).
 MAX_ACCELERATION = 2.0
 MAX_ANGULAR_ACCELERATION = 2 * MAX_ACCELERATION / 0.48
 CMD_VEL_NODE = '/Graph/ROS_Base/CmdVel'
-# base_link height with the wheels (r=0.115, axle 0.05 below base_link) 5 mm
-# off the floor, so wheel contacts cannot bounce the chassis and tilt the scan.
 BASE_HEIGHT = 0.115 + 0.05 + 0.005
 
 
@@ -76,7 +69,6 @@ def build_world(stage, usd_file):
     sun.CreateIntensityAttr(2000.0)
     UsdGeom.XformCommonAPI(sun).SetRotate((30.0, 20.0, 0.0))
 
-    # Safety floor under the environment's own one, top face at z=0.
     ground = UsdGeom.Cube.Define(stage, '/World/ground')
     UsdGeom.XformCommonAPI(ground).SetTranslate((0.0, 0.0, -0.05))
     UsdGeom.XformCommonAPI(ground).SetScale((25.0, 25.0, 0.05))
@@ -87,15 +79,9 @@ def build_world(stage, usd_file):
 
 
 def load_usd_world(stage, usd_file):
-    """Reference a USD environment (e.g. a Blender export: Y-up, cm), turn it
-    Z-up in metres, centre it on the origin with its floor at z=0, and make
-    every mesh a static triangle-mesh collider so the lidar and the chassis
-    see it."""
     src = Usd.Stage.Open(usd_file)
     scale = UsdGeom.GetStageMetersPerUnit(src)
     y_up = UsdGeom.GetStageUpAxis(src) == UsdGeom.Tokens.y
-    # The transform goes on a parent: the referenced root prim may carry its
-    # own xform ops, which XformCommonAPI cannot extend (SetScale just fails).
     env = UsdGeom.Xform.Define(stage, '/World/environment')
     stage.DefinePrim('/World/environment/asset').GetReferences().AddReference(usd_file)
     xf = UsdGeom.XformCommonAPI(env)
@@ -112,10 +98,6 @@ def load_usd_world(stage, usd_file):
     for prim in Usd.PrimRange(env.GetPrim()):
         if not prim.IsA(UsdGeom.Mesh):
             continue
-        # PhysX cannot build any mesh shape (triangle or convex) under a
-        # strongly non-uniform, sheared transform -- e.g. the arena's sliding
-        # doors, exported ~1 km long and squashed 2000:1. Those get an
-        # invisible box collider over their world-aligned bounds instead.
         world = xform_cache.GetLocalToWorldTransform(prim)
         axes = [world.GetRow3(i).GetLength() for i in range(3)]
         if max(axes) > 10 * min(axes):
@@ -123,14 +105,13 @@ def load_usd_world(stage, usd_file):
             cube = UsdGeom.Cube.Define(stage, f'/World/environment_colliders/box_{len(boxed)}')
             UsdGeom.XformCommonAPI(cube).SetTranslate(Gf.Vec3d((r.GetMin() + r.GetMax()) / 2))
             UsdGeom.XformCommonAPI(cube).SetScale(Gf.Vec3f(*(r.GetSize() / 2)))
-            cube.CreatePurposeAttr(UsdGeom.Tokens.guide)  # collide, don't render
+            cube.CreatePurposeAttr(UsdGeom.Tokens.guide)
             UsdPhysics.CollisionAPI.Apply(cube.GetPrim())
             boxed.append(f'{prim.GetName()} {r.GetSize()[0]:.2f}x{r.GetSize()[1]:.2f}x{r.GetSize()[2]:.2f}m')
             continue
         UsdPhysics.CollisionAPI.Apply(prim)
         UsdPhysics.MeshCollisionAPI.Apply(prim).CreateApproximationAttr('none')
         meshes += 1
-    # A closed ceiling is all the default viewport camera sees from above.
     for prim in Usd.PrimRange(env.GetPrim()):
         if prim.GetName().lower() == 'ceiling':
             UsdGeom.Imageable(prim).MakeInvisible()
@@ -142,11 +123,7 @@ def load_usd_world(stage, usd_file):
 
 
 def import_robot():
-    """xacro -> URDF -> USD. xacro needs the ROS env, which this process must
-    not have, so it runs in its own shell -- with a clean environment, since
-    python.sh's PYTHONHOME/PYTHONPATH would break ROS's Python 3.10 tools."""
     out_dir = os.path.expanduser('~/.cache/robocup_isaac')
-    # The importer picks a fresh shoddy_N/ when the output already exists.
     shutil.rmtree(out_dir, ignore_errors=True)
     os.makedirs(out_dir)
     urdf = os.path.join(out_dir, 'shoddy.urdf')
@@ -161,12 +138,10 @@ def import_robot():
     cfg.urdf_path = urdf
     cfg.usd_path = out_dir
     cfg.fix_base = False
-    # Lump the fixed links into base_link, instead of ~30 mass="0" rigid
-    # bodies whose mass PhysX would derive from density.
     cfg.merge_fixed_joints = True
     cfg.ros_package_paths = [{'name': 'robocup_description',
                               'path': os.path.join(WS, 'src/robocup_description')}]
-    cfg.joint_target_type = 'none'  # free wheels, see KinematicBase
+    cfg.joint_target_type = 'none'
     usd_file = URDFImporter(cfg).import_urdf()
     if not usd_file:
         raise RuntimeError(f'URDF import failed for {urdf}')
@@ -174,8 +149,6 @@ def import_robot():
 
 
 def lidar_offset(urdf):
-    """lidar_frame's offset in base_link. Merging fixed joints removes the
-    lidar_frame prim, so the sensor is mounted on base_link at this offset."""
     for joint in ET.parse(urdf).getroot().iter('joint'):
         if joint.find('child').get('link') == 'lidar_frame':
             assert joint.find('parent').get('link') == 'base_link'
@@ -197,7 +170,6 @@ def find_prims(root_prim):
 
 
 def make_frictionless(stage, robot):
-    """Wheels (and body) slide freely, so only KinematicBase moves the robot."""
     material = UsdShade.Material.Define(stage, '/World/PhysicsMaterials/frictionless')
     physics_material = UsdPhysics.MaterialAPI.Apply(material.GetPrim())
     physics_material.CreateStaticFrictionAttr(0.0)
@@ -208,9 +180,6 @@ def make_frictionless(stage, robot):
 
 
 def create_base_graph(articulation):
-    """cmd_vel subscriber (read by KinematicBase) and odometry + odom->base_link
-    TF. Like create_ros2_odometry_graph but without its world->odom TF, which
-    would give `odom` a second parent once a map->odom source is added."""
     keys = og.Controller.Keys
     target = [usdrt.Sdf.Path(articulation)]
     og.Controller.edit(
@@ -257,9 +226,6 @@ def create_base_graph(articulation):
 
 
 class KinematicBase:
-    """Planar base: every physics step the chassis is put back level at
-    BASE_HEIGHT, keeping the x/y/yaw physics produced (so it still collides
-    with the world), and given the acceleration-limited cmd_vel as velocity."""
 
     def __init__(self, articulation):
         self.robot = Articulation(articulation)
@@ -299,16 +265,12 @@ def main():
     UsdGeom.XformCommonAPI(spawn).SetRotate((0.0, 0.0, math.degrees(args.yaw)))
     robot = stage.DefinePrim('/World/shoddy/robot')
     robot.GetReferences().AddReference(usd_file)
-    # Physics lives in a variant of the imported asset and none is selected
-    # by default, which leaves the robot without rigid bodies or joints.
     robot.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
     make_frictionless(stage, robot)
     simulation_app.update()
     articulation, base_link = find_prims(robot)
     print(f'[robocup_isaac] articulation={articulation} base_link={base_link} lidar_xyz={lidar_xyz}')
 
-    # Hokuyo URG-04LX stand-in. The 2D example lidar scans 360 deg, so its rear
-    # rays cross the camera mast ~6 cm behind it; the near range drops those.
     lidar_path = base_link + '/rtx_lidar'
     Lidar.create(path=lidar_path, config='Example_Rotary_2D', tick_rate=10.0,
                  translations=[lidar_xyz],
@@ -326,7 +288,7 @@ def main():
     simulation_app.update()
 
     app_utils.play()
-    simulation_app.update()  # physics views exist only once playing
+    simulation_app.update()
     base = KinematicBase(articulation)
     SimulationManager.register_callback(lambda dt, context: base.step(),
                                         event=SimulationEvent.PHYSICS_PRE_STEP)
@@ -343,7 +305,6 @@ def main():
 try:
     main()
 except BaseException:
-    # close() exits the process before Python would print the traceback.
     traceback.print_exc()
 finally:
     simulation_app.close()

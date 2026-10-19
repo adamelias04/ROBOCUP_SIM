@@ -1,22 +1,21 @@
 #!/bin/bash
-# Start the whole RoboCup simulation: Isaac Sim (arena + robot) and the ROS 2
-# side (robot description, lidar relay, RViz, steering GUI).
+# Spusti celu simulaciu: Isaac Sim (arena + robot) a ROS 2 stranu (popis
+# robota, relay lidaru, RViz, ovladanie cez rqt, volitelne Nav2).
 #
-#   ./run.sh                 build on first run, then start everything
-#   ./run.sh --build         rebuild the workspace first
-#   ./run.sh --nav           also run Nav2 + slam_toolbox (goal: RViz 2D Goal Pose)
-#   ./run.sh --nav --planner dwb    local planner: teb (default) | dwb | tr
-#   ./run.sh --headless      any other option goes to the Isaac script
-#                            (--headless, --x, --y, --yaw, --world FILE.usd)
+#   ./run.sh                 pri prvom behu zbuilduje ws, potom spusti vsetko
+#   ./run.sh --build         najprv prebuilduje ws
+#   ./run.sh --nav           aj Nav2 + slam_toolbox (ciel cez 2D Goal Pose v RViz)
+#   ./run.sh --nav --planner dwb    lokalny planner: teb (default) | dwb | tr
+#   ./run.sh --headless      ostatne volby idu do Isaac skriptu
+#                            (--headless, --x, --y, --yaw, --world SUBOR.usd)
 #
-# Both sides run in a clean environment with only /opt/ros/humble and this
-# workspace, so a shell sourced for another workspace or set up for the real
-# robot (RMW_IMPLEMENTATION=rmw_zenoh_cpp ...) cannot leak in.
+# Obe strany bezia v cistom prostredi len s /opt/ros/humble a tymto ws, aby
+# sa sem nedostal shell z ineho ws ani nastavenie pre realneho robota
+# (RMW_IMPLEMENTATION=rmw_zenoh_cpp ...).
 set -euo pipefail
 
 WS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ISAACSIM_PATH="${ISAACSIM_PATH:-$HOME/isaacsim}"
-# Waiting for /clock covers Isaac's first start, which compiles shaders.
 STARTUP_TIMEOUT=600
 
 BUILD=0
@@ -59,7 +58,6 @@ LAUNCH_PID=""
 cleanup() {
     trap - EXIT INT TERM
     [ -n "$LAUNCH_PID" ] && kill -INT "$LAUNCH_PID" 2>/dev/null || true
-    # Isaac runs in its own process group (setsid); stop all of it.
     [ -n "$ISAAC_PID" ] && kill -TERM -- "-$ISAAC_PID" 2>/dev/null || true
     wait 2>/dev/null || true
 }
@@ -90,5 +88,4 @@ echo "[run.sh] starting ROS 2 side"
 ros "exec ros2 launch robocup_sim robocup.launch.py nav:=$NAV planner:=$PLANNER" &
 LAUNCH_PID=$!
 
-# Stop everything as soon as either side ends (e.g. the Isaac window closed).
 wait -n "$ISAAC_PID" "$LAUNCH_PID" || true
